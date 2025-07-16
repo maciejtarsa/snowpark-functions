@@ -25,19 +25,16 @@ snow snowpark build
 Deploy the project
 
 ```bash
-# create a zip for the package
-zip -r python_package.zip python_package
-# deploy the project
 snow snowpark deploy --replace
 ```
 <p align="center">
   <img src="images/snowpark_deploy.png" alt="Result of deploying the project" />
 </p>
-This will deploy the functions and procedures to your Snowflake environment using credentials from your `.snowalake/config.toml` file. Credentials and other parameters can also be provided with CLI flags.  
+This will deploy the functions and procedures to your Snowflake environment using credentials from your `.snowflake/config.toml` file. Credentials and other parameters can also be provided with CLI flags.  
 
 More information about Snowpark project definition: https://docs.snowflake.com/en/developer-guide/snowflake-cli/snowpark/create#label-snowcli-create-snowpark
 
-### Snowpark function
+### Snowpark scalar function
 
 Functions can be defined very similarly to regular Python functions, e.g.:
 ```python
@@ -88,6 +85,8 @@ Sample definition in `snowflake.yaml` file, e.g.:
       use_mixins:
         - snowpark_shared
 ```
+This definitition is also more compes as it requires definition of input parameters (rows in your input table and their types) and output parameters and types.  
+
 More information on defining these: https://docs.snowflake.com/en/developer-guide/udf/python/udf-python-tabular-functions
 
 ## Execution
@@ -105,24 +104,24 @@ snow snowpark execute function "hello_function('Olaf')"
 
 ### Examples and dbt models
 
-Once deployed, they can be used in your Snowflake or Python code.  
+Once deployed, they can be used in your Snowflake SQL oe Python code.  
 Scalar functions:
 ```sql
 select
     id,
-    dev.hello_function(name) as augmented_name,
+    dbt_demo.functions.hello_function(name) as augmented_name,
 from source_data
 ```
 ```python
 result_df = source_df.select(
       "id",
-      session.call_function("dev.hello_function", source_df["name"]).alias("augmented_name")
+      session.call_function("dbt_demo.functions.hello_function", source_df["name"]).alias("augmented_name")
   )
 ```
 And table functions:
 ```sql
 SELECT transform_table.id, transform_table.new_value
-  FROM source_data, TABLE(DBT_DEMO.DEV.transform_table(id, value));
+  FROM source_data, TABLE(dbt_demo.functions.transform_table(id, value));
 ```
 ```python
 sql = 
@@ -130,12 +129,14 @@ result_df = session.sql(
   f"""
     SELECT t.id, t.value
     FROM {input_df} t,
-    TABLE(dev.transform_table(t.id, t.value))
+    TABLE(dbt_demo.functions.transform_table(t.id, t.value))
 """
 )
 ```
 
 Sample dbt models for functions and table functions can be found in `sample_dbt_models` directory.
+
+---
 
 ## Snowpark packages
 
@@ -156,7 +157,7 @@ from snowflake.snowpark.functions import lit
 def model(dbt, session):
     dbt.config(
         materialized = "table",
-        imports = ['@dbt_demo.dev.packages/sample_function.py'],
+        imports = ['@dbt_demo.functions.packages/sample_function.py'],
     )
     import sample_function
     source_df = dbt.ref("raw_table")  
@@ -172,13 +173,13 @@ cd snowpark
 zip -r python_package.zip python_package
 cd ..
 ```
-You can also achieve this with running snow command `snow snowpark build`.  
+You can also achieve this with running snow command `snow snowpark build` if using snowpark setup mentioned above.  
 The package can then be uploaded to Snowflake
 ```bash
 snow snowpark package upload --file="python_package.zip" --stage="packages" --overwrite --schema dev
 ```
 
-That package can be be added to imports in your dbt Python model. Note it needs to be zipper with the folder name and Python files inside this folder. When Snowflake unpacks it - it will refer to that folder name as the package name.
+That package can be be added to imports in your dbt Python model. Note - it needs to be zipped with the folder and Python files inside this folder. When Snowflake unpacks it - it will refer to that folder name as the package name.
 ```python
 from snowflake.snowpark.functions import lit
 
@@ -186,7 +187,7 @@ def model(dbt, session):
 
     dbt.config(
         materialized = "table",
-        imports = ['@dbt_demo.dev.packages/python_package.zip'],
+        imports = ['@dbt_demo.functions.packages/python_package.zip'],
     )
 
     from python_package import functions
@@ -200,6 +201,25 @@ def model(dbt, session):
     
     return final_df
 ```
+
+## Permissions
+
+Storing these functions and packages in a database and schema accessible from across the acount would be advisable.
+```sql
+CREATE SCHEMA dbt_demo.functions;
+CREATE STAGE dbt_demo.functions.packages;
+```
+
+In order to access these functions and packages, users needing access would require the following permissions:
+```sql
+GRANT USAGE ON DATABASE dbt_demo TO ROLE my_role;
+GRANT USAGE ON SCHEMA dbt_demo.functions TO ROLE my_role;
+GRANT USAGE, READ ON STAGE dbt_demo.functions.packages TO ROLE my_role;
+GRANT USAGE ON FUTURE FUNCTIONS IN SCHEMA dbt_demo.functions TO ROLE my_role;
+GRANT USAGE ON FUTURE PROCEDURES IN SCHEMA dbt_demo.functions TO ROLE my_role;
+```
+We're using future functions/procedures here so that users have access to any functions created in the future.
+It may be a good idea to also create a specific role that will have permission to create functions/procedures and upload packages to Snowflake.
 
 ## Testing
 

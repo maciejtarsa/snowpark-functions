@@ -8,7 +8,7 @@ def model(dbt, session):
     # Use Snowpark DataFrame API to select columns and apply the scalar function
     result_df = source_df.select(
         "id",
-        session.call_function("dev.hello_function", source_df["name"]).alias("augmented_name")
+        session.call_function("dbt_demo.functions.hello_function", source_df["name"]).alias("augmented_name")
     )
 
     return result_df

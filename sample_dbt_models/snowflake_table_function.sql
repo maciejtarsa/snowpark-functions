@@ -4,4 +4,4 @@ with source_data as (
 )
 
 SELECT transform_table.id, transform_table.new_value
-  FROM source_data, TABLE(DBT_DEMO.DEV.transform_table(id, value));
+  FROM source_data, TABLE(dbt_demo.functions.transform_table(id, value));
