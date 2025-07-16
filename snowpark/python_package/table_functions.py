@@ -1,4 +1,4 @@
-from common import print_hello
+from python_package.sample_function import print_hello
 
 
 class TransformTable:
