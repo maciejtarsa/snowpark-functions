@@ -9,7 +9,7 @@ def model(dbt, session):
     sql = f"""
         SELECT t.id, t.value
         FROM {input_df} t,
-        TABLE(dbt_demo.functions.transform_table(t.id, t.value))
+        TABLE(dbt_demo.custom_functions.transform_table(t.id, t.value))
     """
 
     # Execute the query and return the result as a Snowpark DataFrame

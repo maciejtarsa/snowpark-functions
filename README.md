@@ -109,19 +109,19 @@ Scalar functions:
 ```sql
 select
     id,
-    dbt_demo.functions.hello_function(name) as augmented_name,
+    dbt_demo.custom_functions.hello_function(name) as augmented_name,
 from source_data
 ```
 ```python
 result_df = source_df.select(
       "id",
-      session.call_function("dbt_demo.functions.hello_function", source_df["name"]).alias("augmented_name")
+      session.call_function("dbt_demo.custom_functions.hello_function", source_df["name"]).alias("augmented_name")
   )
 ```
 And table functions:
 ```sql
 SELECT transform_table.id, transform_table.new_value
-  FROM source_data, TABLE(dbt_demo.functions.transform_table(id, value));
+  FROM source_data, TABLE(dbt_demo.custom_functions.transform_table(id, value));
 ```
 ```python
 sql = 
@@ -129,7 +129,7 @@ result_df = session.sql(
   f"""
     SELECT t.id, t.value
     FROM {input_df} t,
-    TABLE(dbt_demo.functions.transform_table(t.id, t.value))
+    TABLE(dbt_demo.custom_functions.transform_table(t.id, t.value))
 """
 )
 ```
@@ -153,11 +153,11 @@ snow snowpark package upload --file="sample_function.py" --stage="packages" --ov
 ```
 That file can be be added to imports in your dbt Python model and used with
 ```python
-from snowflake.snowpark.functions import lit
+from snowflake.snowpark.custom_functions import lit
 def model(dbt, session):
     dbt.config(
         materialized = "table",
-        imports = ['@dbt_demo.functions.packages/sample_function.py'],
+        imports = ['@dbt_demo.custom_functions.packages/sample_function.py'],
     )
     import sample_function
     source_df = dbt.ref("raw_table")  
@@ -187,7 +187,7 @@ def model(dbt, session):
 
     dbt.config(
         materialized = "table",
-        imports = ['@dbt_demo.functions.packages/python_package.zip'],
+        imports = ['@dbt_demo.custom_functions.packages/python_package.zip'],
     )
 
     from python_package import functions
@@ -206,17 +206,17 @@ def model(dbt, session):
 
 Storing these functions and packages in a database and schema accessible from across the acount would be advisable.
 ```sql
-CREATE SCHEMA dbt_demo.functions;
-CREATE STAGE dbt_demo.functions.packages;
+CREATE SCHEMA dbt_demo.custom_functions;
+CREATE STAGE dbt_demo.custom_functions.packages;
 ```
 
 In order to access these functions and packages, users needing access would require the following permissions:
 ```sql
 GRANT USAGE ON DATABASE dbt_demo TO ROLE my_role;
-GRANT USAGE ON SCHEMA dbt_demo.functions TO ROLE my_role;
-GRANT USAGE, READ ON STAGE dbt_demo.functions.packages TO ROLE my_role;
-GRANT USAGE ON FUTURE FUNCTIONS IN SCHEMA dbt_demo.functions TO ROLE my_role;
-GRANT USAGE ON FUTURE PROCEDURES IN SCHEMA dbt_demo.functions TO ROLE my_role;
+GRANT USAGE ON SCHEMA dbt_demo.custom_functions TO ROLE my_role;
+GRANT USAGE, READ ON STAGE dbt_demo.custom_functions.packages TO ROLE my_role;
+GRANT USAGE ON FUTURE FUNCTIONS IN SCHEMA dbt_demo.custom_functions TO ROLE my_role;
+GRANT USAGE ON FUTURE PROCEDURES IN SCHEMA dbt_demo.custom_functions TO ROLE my_role;
 ```
 We're using future functions/procedures here so that users have access to any functions created in the future.
 It may be a good idea to also create a specific role that will have permission to create functions/procedures and upload packages to Snowflake.

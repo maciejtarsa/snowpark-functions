@@ -4,7 +4,7 @@ def model(dbt, session):
 
     dbt.config(
         materialized = "table",
-        imports = ['@dbt_demo.functions.packages/python_package.zip'],
+        imports = ['@dbt_demo.custom_functions.packages/python_package.zip'],
     )
 
     from python_package import functions

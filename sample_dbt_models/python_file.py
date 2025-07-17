@@ -3,7 +3,7 @@ from snowflake.snowpark.functions import lit
 def model(dbt, session):
     dbt.config(
         materialized = "table",
-        imports = ['@dbt_demo.functions.packages/sample_function.py'],
+        imports = ['@dbt_demo.custom_functions.packages/sample_function.py'],
     )
     import sample_function
     source_df = dbt.ref("raw_table")  
