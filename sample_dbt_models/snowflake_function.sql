@@ -5,5 +5,5 @@ with source_data as (
 
 select
     id,
-    dev.hello_function(name) as augmented_name,
+    dbt_demo.custom_functions.hello_function(name) as augmented_name,
 from source_data

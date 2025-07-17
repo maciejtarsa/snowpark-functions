@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from common import print_hello
+from python_package.sample_function import print_hello
 
 
 def hello_function(name: str) -> str:

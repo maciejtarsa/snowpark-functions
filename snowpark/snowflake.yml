@@ -4,7 +4,7 @@ mixins:
   snowpark_shared:
     artifacts:
       - dest: sample_snowpark
-        src: app/
+        src: python_package/
     stage: dev
 
 entities:
@@ -12,7 +12,7 @@ entities:
     type: function
     identifier:
       name: hello_function
-    handler: functions.hello_function
+    handler: python_package.functions.hello_function
     signature:
       - name: name
         type: string
@@ -25,7 +25,7 @@ entities:
     type: function
     identifier:
       name: transform_table
-    handler: table_functions.TransformTable
+    handler: python_package.table_functions.TransformTable
     signature:
       - name: id
         type: string
@@ -40,7 +40,7 @@ entities:
     type: procedure
     identifier:
       name: hello_procedure
-    handler: procedures.hello_procedure
+    handler: python_package.procedures.hello_procedure
     signature:
       - name: name
         type: string
@@ -53,7 +53,7 @@ entities:
     type: procedure
     identifier:
       name: test_procedure
-    handler: procedures.test_procedure
+    handler: python_package.procedures.test_procedure
     signature: ''
     returns: string
     meta:
