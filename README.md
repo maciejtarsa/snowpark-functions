@@ -223,15 +223,33 @@ It may be a good idea to also create a specific role that will have permission t
 
 ## Testing
 
-Functions can be tested locally if they contain main block for local testing/debugging, e.g.
+Thorough testing is essential to ensure your Snowpark functions behave as expected before deployment.
+
+### Local testing
+Local testing is useful for quick debugging and validation during development. To enable this, include a __main__ block in your Python file:
 ```python
 # For local debugging
 # Be aware you may need to type-convert arguments if you add input parameters
 if __name__ == "__main__":
     print(hello_function(*sys.argv[1:]))  # type: ignore
 ```
-This can be tested by running
+Run the script with:
 ```bash
-python3 snowpark/app/functions.py Jane
+python3 snowpark/python_package/functions.py Jane
 ```
-Pytest can also be used, more info in [Snowflake documentation](https://docs.snowflake.com/en/developer-guide/snowpark/python/testing-python-snowpark)
+### pytest
+For more robust and repeatable testing, use Pytest. This allows you to define unit tests and run them automatically.  
+Example test file: `python_packages/tests/test_functions.py`
+```python
+import pytest
+from python_package.functions import hello_function
+def test_hello_function():
+    assert hello_function("World") == "Hello World!"
+    assert hello_function("Alice") == "Hello Alice!"
+    assert hello_function("") == "Hello !"
+```
+Run all tests with:
+```bash
+pytest snowpark_functions
+```
+More info: [Snowflake documentation](https://docs.snowflake.com/en/developer-guide/snowpark/python/testing-python-snowpark)
